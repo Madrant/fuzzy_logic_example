@@ -1,5 +1,5 @@
 close all;
-% clear all;
+clear all;
 clc;
 
 % Create Mamdani fuzzy inference system
@@ -11,29 +11,29 @@ fis = addInput(fis, [0 100], 'Name', "loss");
 fis = addInput(fis, [0 100], 'Name', "load");
 
 % Configure outputs
-fis = addOutput(fis, [0 1], 'Name', "quality");
+fis = addOutput(fis, [0 100], 'Name', "quality");
 
 % Setup Membreship functions
 %
 % Bandwith
-fis = addMF(fis, "bandwith", "trimf", [-40.25 1 42.2500],       'Name', "low");
-fis = addMF(fis, "bandwith", "trimf", [9.2500 50.5000 91.7500], 'Name', "normal");
-fis = addMF(fis, "bandwith", "trimf", [58.7500 100 141.3000],   'Name', "high");
+fis = addMF(fis, "bandwith", "trimf", [ 0   2.5   5],   'Name', "low");
+fis = addMF(fis, "bandwith", "trimf", [ 5  12.5  20],   'Name', "normal");
+fis = addMF(fis, "bandwith", "trimf", [20  60   100],   'Name', "high");
 
 % Packet loss
-fis = addMF(fis, "loss", "gaussmf", [3    5],   'Name', "low");
-fis = addMF(fis, "loss", "gaussmf", [5   30],   'Name', "medium");
-fis = addMF(fis, "loss", "gaussmf", [20 100],   'Name', "high");
+fis = addMF(fis, "loss", "trimf", [ 0  5  10],   'Name', "low");
+fis = addMF(fis, "loss", "trimf", [10 15  20],   'Name', "medium");
+fis = addMF(fis, "loss", "trimf", [20 60 100],   'Name', "high");
 
 % Server load
-fis = addMF(fis, "load", "trimf", [-41.67   0   41.67], 'Name', "low");
-fis = addMF(fis, "load", "trimf", [8.333   50   91.67], 'Name', "medium");
-fis = addMF(fis, "load", "trimf", [58.33  100  141.7],  'Name', "high");
+fis = addMF(fis, "load", "trimf", [ 0   20   40], 'Name', "low");
+fis = addMF(fis, "load", "trimf", [40   60   80], 'Name', "medium");
+fis = addMF(fis, "load", "trimf", [80   90  100], 'Name', "high");
 
 % Service quality
-fis = addMF(fis, "quality", "trimf", [-0.41667  0   0.41667],   'Name', "low");
-fis = addMF(fis, "quality", "trimf", [0.083333  0.5 0.91667],   'Name', "acceptable");
-fis = addMF(fis, "quality", "trimf", [0.58333   1   1.4167],    'Name', "excellent");
+fis = addMF(fis, "quality", "trimf", [ 0  20  40],  'Name', "low");
+fis = addMF(fis, "quality", "trimf", [40  60  80],  'Name', "acceptable");
+fis = addMF(fis, "quality", "trimf", [80  90 100],  'Name', "excellent");
 
 % Add rules
 rule1 = "bandwith~=low & loss==low & load~=high => quality=excellent (1)";
@@ -47,7 +47,7 @@ rules = [rule1 rule2 rule3 rule4 rule5 rule6];
 fis = addRule(fis, rules);
 
 % Evaluate fuzzy logic system
-bandwith = 10;
+bandwith = 1;
 loss = 5;
 load = 40;
 
@@ -71,15 +71,17 @@ fig_surf = figure('name', "Output Surface");
 tiledlayout(3, 2);
 opt = gensurfOptions;
 
-% Bandwith - Loss
-nexttile; opt.InputIndex = [1 2]; opt.ReferenceInputs = [NaN NaN 50]; gensurf(fis, opt); view(90, 0);
-nexttile; opt.InputIndex = [1 2]; opt.ReferenceInputs = [NaN NaN 50]; gensurf(fis, opt); view(00, 0);
-
 % Loss - Load
-nexttile; opt.InputIndex = [2 3]; opt.ReferenceInputs = [10 NaN NaN]; gensurf(fis, opt); view(90, 0);
-nexttile; opt.InputIndex = [2 3]; opt.ReferenceInputs = [10 NaN NaN]; gensurf(fis, opt); view(00, 0);
+nexttile; opt.InputIndex = [2 3]; opt.ReferenceInputs = [bandwith NaN NaN]; gensurf(fis, opt); view(90, 0);
+title(sprintf("Bandwith: %.2f Mbps\n", bandwith));
+nexttile; opt.InputIndex = [2 3]; opt.ReferenceInputs = [bandwith NaN NaN]; gensurf(fis, opt); view(00, 0);
 
-% Bandwith - Load
-nexttile; opt.InputIndex = [1 3]; opt.ReferenceInputs = [NaN 5 NaN];  gensurf(fis, opt); view(90, 0);
-nexttile; opt.InputIndex = [1 3]; opt.ReferenceInputs = [NaN 5 NaN];  gensurf(fis, opt); view(00, 0);
+% Load - Bandwith
+nexttile; opt.InputIndex = [1 3]; opt.ReferenceInputs = [NaN loss NaN];  gensurf(fis, opt); view(90, 0);
+title(sprintf("Loss: %.2f %%\n", loss));
+nexttile; opt.InputIndex = [1 3]; opt.ReferenceInputs = [NaN loss NaN];  gensurf(fis, opt); view(00, 0);
 
+% Bandwith - Loss
+nexttile; opt.InputIndex = [1 2]; opt.ReferenceInputs = [NaN NaN load]; gensurf(fis, opt); view(90, 0);
+title(sprintf("Load: %.2f %%\n", load));
+nexttile; opt.InputIndex = [1 2]; opt.ReferenceInputs = [NaN NaN load]; gensurf(fis, opt); view(00, 0);
