@@ -16,43 +16,73 @@ fis = addOutput(fis, [0 100], 'Name', "quality");
 % Setup Membreship functions
 %
 % Bandwith
-fis = addMF(fis, "bandwith", "trimf", [ 0   2.5   5],   'Name', "low");
-fis = addMF(fis, "bandwith", "trimf", [ 5  12.5  20],   'Name', "normal");
-fis = addMF(fis, "bandwith", "trimf", [20  60   100],   'Name', "high");
+fis = addMF(fis, "bandwith", "trapmf", [ 0  0   5  10],   'Name', "low");
+fis = addMF(fis, "bandwith", "trapmf", [ 5 10  20  30],   'Name', "medium");
+fis = addMF(fis, "bandwith", "trapmf", [20 50 100 100],   'Name', "high");
 
 % Packet loss
-fis = addMF(fis, "loss", "trimf", [ 0  5  10],   'Name', "low");
-fis = addMF(fis, "loss", "trimf", [10 15  20],   'Name', "medium");
-fis = addMF(fis, "loss", "trimf", [20 60 100],   'Name', "high");
+fis = addMF(fis, "loss", "trapmf", [ 0  0  5 10],   'Name', "low");
+fis = addMF(fis, "loss", "trapmf", [ 5 10 15 20],   'Name', "medium");
+fis = addMF(fis, "loss", "trapmf", [10 30 100 100],   'Name', "high");
 
 % Server load
-fis = addMF(fis, "load", "trimf", [ 0   20   40], 'Name', "low");
-fis = addMF(fis, "load", "trimf", [40   60   80], 'Name', "medium");
-fis = addMF(fis, "load", "trimf", [80   90  100], 'Name', "high");
+fis = addMF(fis, "load", "trapmf", [ 0   0  20  40], 'Name', "low");
+fis = addMF(fis, "load", "trapmf", [30  50  70  80], 'Name', "medium");
+fis = addMF(fis, "load", "trapmf", [70  90 100 100], 'Name', "high");
 
 % Service quality
-fis = addMF(fis, "quality", "trimf", [ 0  20  40],  'Name', "low");
-fis = addMF(fis, "quality", "trimf", [40  60  80],  'Name', "acceptable");
-fis = addMF(fis, "quality", "trimf", [80  90 100],  'Name', "excellent");
+fis = addMF(fis, "quality", "trapmf", [ 0   0  20  40],  'Name', "low");
+fis = addMF(fis, "quality", "trapmf", [30  50  60  75],  'Name', "medium");
+fis = addMF(fis, "quality", "trapmf", [70  90 100 100],  'Name', "high");
 
 % Add rules
-rule1 = "bandwith~=low & loss==low & load~=high => quality=excellent (1)";
-rule2 = "bandwith==normal & loss==low & load==medium => quality=excellent (1)";
-rule3 = "bandwith==normal & loss~=high & load~=high => quality=acceptable (1)";
-rule4 = "bandwith==high & loss==medium & load==medium => quality=acceptable (1)";
-rule5 = "bandwith~=high & loss==high & load==high => quality=low (1)";
-rule6 = "bandwith==low & loss~=low & load~=low => quality=low (1)";
+rules = [ "" ];
+rules(:, end + 1) = "bandwith==high & loss==low & load~=high => quality=high (1)";
+rules(:, end + 1) = "bandwith~=low & loss==low & load~=high => quality=high (1)";
 
-rules = [rule1 rule2 rule3 rule4 rule5 rule6];
+rules(:, end + 1) = "bandwith~=high & loss~=low & load~=high => quality=medium (1)";
+rules(:, end + 1) = "bandwith~=low & loss==low & load==high => quality=medium (1)";
+rules(:, end + 1) = "bandwith==low & loss==low & load==high => quality=medium (1)";
+rules(:, end + 1) = "bandwith==high & loss~=high & load~=high => quality=medium (1)";
+rules(:, end + 1) = "bandwith==low & loss~=high & load~=high => quality=medium (1)";
+rules(:, end + 1) = "bandwith==high & loss==high & load~=high => quality=medium (1)";
+
+rules(:, end + 1) = "bandwith==high & loss==high & load==high => quality=low (1)";
+rules(:, end + 1) = "bandwith~=high & loss==high & load~=high => quality=low (1)";
+rules(:, end + 1) = "bandwith~=high & loss~=low & load==high => quality=low (1)";
+rules(:, end + 1) = "bandwith==high & loss~=high & load==high => quality=low (1)";
+
 fis = addRule(fis, rules);
 
 % Evaluate fuzzy logic system
+test_all_values = true;
+
+if test_all_values
+for bandwith = 0:10:100
+    for loss = 0:10:100
+        for load = 0:10:100
+            quality = evalfis(fis, [bandwith loss load]);
+
+            % Fuzzy output is set to mean value:
+            % no rules fired for given values
+            if quality == 50.0 % Edit this value for the own case
+                fprintf("Bandwith: %.2f Packet loss: %.2f Load: %.2f Service quality: %.2f\n", bandwith, loss, load, quality);
+                error("No rules fired");
+            end
+        end % load
+    end % loss
+end % bandwith
+end
+
+% Test fuzzy system for predefined values
 bandwith = 1;
-loss = 5;
-load = 40;
+loss = 50;
+load = 60;
 
 quality = evalfis(fis, [bandwith loss load]);
-fprintf("Service quality: %f\n", quality);
+fprintf("Bandwith: %.2f Packet loss: %.2f Load: %.2f Service quality: %.2f\n", bandwith, loss, load, quality);
+
+%waitforbuttonpress;
 
 % Plot membership functions
 fig_mf = figure('name', "Membership Functions");
