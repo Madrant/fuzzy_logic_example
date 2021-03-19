@@ -39,7 +39,7 @@ print_alpha_level("  High  ", bw_h, levels);
 % Calculate membership functions:
 bandwith = 20;
 loss = 5;
-load = 60;
+load = 40;
 
 fprintf("Bandwith: %.2f Packet loss: %.2f Server load: %.2f\n", bandwith, loss, load);
 
@@ -115,9 +115,11 @@ fprintf("Service quality: Low: %.2f Medium: %.2f High: %.2f\n", rule_low, rule_m
 
 % Display result
 names = ["Low" "Medium" "High"];
+sq = [sq_l; sq_m; sq_h];
+
 [val, index] = max(rules);
 
-fprintf("Service quality: %s\n", names(index));
+fprintf("Service quality: %s: %.2f\n", names(index), value_trapmf(val, sq(index,:)));
 
 % Calculate alpha-level boundaries
 function [q1, q2] = alpha_level_trapmf(trapmf, alpha)
@@ -160,6 +162,23 @@ function mf = mf_trapmf(q, trapmf)
     if (q > q_h_1) && (q <= q_h_0)
         mf = (q_h_0 - q) / (q_h_0 - q_h_1);
     end
+end
+
+function q = value_trapmf(mf, trapmf)
+    q_l_0 = trapmf(1);
+    q_l_1 = trapmf(2);
+    q_h_1 = trapmf(3);
+    q_h_0 = trapmf(4);
+
+    if mf == 0
+        error("The value is not a member of a variable");
+    end
+
+    % mf = (q - q_l_0) / (q_l_1 - q_l_0);
+    q = mf * (q_l_1 - q_l_0) + q_l_0;
+
+    % mf = (q_h_0 - q) / (q_h_0 - q_h_1);
+    % q = mf * (q_h_1 - q_h_0) + q_h_0;
 end
 
 % Process fuzzy logic rules
