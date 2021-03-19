@@ -22,6 +22,9 @@ sq_l = [ 0   0  20  40];
 sq_m = [30  50  60  75];
 sq_h = [70  90 100 100];
 
+% Plot membership functions
+plot_trapmf(cat(3, [bw_l; bw_m; bw_h], [pl_l; pl_m; pl_h], [sl_l; sl_m; sl_h], [sq_l; sq_m; sq_h]));
+
 % Calculate alpha-levels
 levels = [1 0.5 0];
 
@@ -34,9 +37,9 @@ print_alpha_level("  Medium", bw_m, levels);
 print_alpha_level("  High  ", bw_h, levels); 
 
 % Calculate membership functions:
-bandwith = 10;
-loss = 22;
-load = 91;
+bandwith = 20;
+loss = 5;
+load = 60;
 
 fprintf("Bandwith: %.2f Packet loss: %.2f Server load: %.2f\n", bandwith, loss, load);
 
@@ -147,4 +150,25 @@ end
 
 function result = fuzzy_rule(a, b, c)
     result = min([a b c]);
+end
+
+function plot_trapmf(mf_array)
+    num_pages = size(mf_array, 3);
+
+    figure('name', "Membership Functions");
+    tiledlayout(num_pages, 1);
+
+    % Each page is a N х 4 trapezoidal membership function
+    for p = 1:num_pages
+        nexttile;
+        hold on;
+
+        num_rows = size(mf_array(:,:,p));
+
+        for row = 1:num_rows
+            plot(mf_array(row,:,p), [0 1 1 0]);
+        end
+
+        hold off;
+    end
 end
