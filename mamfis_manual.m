@@ -55,8 +55,7 @@ fprintf("MF Packet loss:\tLow: %.2f\t Medium: %.2f\t High: %.2f\n", pl_mf(1), pl
 sl_mf = [ mf_trapmf(load, sl_l) mf_trapmf(load, sl_m) mf_trapmf(load, sl_h) ];
 fprintf("MF Server load:\tLow: %.2f\t Medium: %.2f\t High: %.2f\n", sl_mf(1), sl_mf(2), sl_mf(3));
 
-% Process rules
-
+% Some stuff to simplify rules
 bw_low = bw_mf(1);
 bw_med = bw_mf(2);
 bw_high = bw_mf(3);
@@ -69,6 +68,8 @@ sl_low = sl_mf(1);
 sl_med = sl_mf(2);
 sl_high = sl_mf(3);
 
+% Define fuzzy logic rules (Knowledge base)
+%
 % "bandwith==high & loss==low & load~=high => quality=high (1)";
 rule_high1 = fuzzy_rule(bw_high, pl_low, 1 - sl_high);
 
@@ -104,6 +105,19 @@ rule_low3 = fuzzy_rule(1 - bw_high, 1 - pl_low, sl_high);
 
 % "bandwith==high & loss~=high & load==high => quality=low (1)";
 rule_low4 = fuzzy_rule(bw_high, 1- pl_high, sl_high);
+
+rule_high = max([rule_high1 rule_high2]);
+rule_med = max([rule_med1 rule_med2 rule_med3 rule_med4 rule_med5 rule_med6]);
+rule_low = max([rule_low1 rule_low2 rule_low3 rule_low4]);
+
+rules = [rule_low rule_med rule_high ];
+fprintf("Service quality: Low: %.2f Medium: %.2f High: %.2f\n", rule_low, rule_med, rule_high);
+
+% Display result
+names = ["Low" "Medium" "High"];
+[val, index] = max(rules);
+
+fprintf("Service quality: %s\n", names(index));
 
 % Calculate alpha-level boundaries
 function [q1, q2] = alpha_level_trapmf(trapmf, alpha)
@@ -148,10 +162,12 @@ function mf = mf_trapmf(q, trapmf)
     end
 end
 
+% Process fuzzy logic rules
 function result = fuzzy_rule(a, b, c)
     result = min([a b c]);
 end
 
+% Plot trapezoidal membership functions
 function plot_trapmf(mf_array)
     num_pages = size(mf_array, 3);
 
