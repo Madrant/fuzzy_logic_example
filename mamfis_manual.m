@@ -19,7 +19,7 @@ sl_h = [70  90 100 100];
 
 % Service quality
 sq_l = [ 0   0  20  40];
-sq_m = [30  50  60  75];
+sq_m = [30  50  60  80];
 sq_h = [70  90 100 100];
 
 % Plot membership functions
@@ -42,6 +42,18 @@ loss = 5;
 load = 40;
 
 fprintf("Bandwith: %.2f Packet loss: %.2f Server load: %.2f\n", bandwith, loss, load);
+
+mf_trapmf_coeff("BW Low", bw_l);
+mf_trapmf_coeff("BW Medium", bw_m);
+mf_trapmf_coeff("BW High", bw_h);
+
+mf_trapmf_coeff("PL Low", pl_l);
+mf_trapmf_coeff("PL Medium", pl_m);
+mf_trapmf_coeff("PL High", pl_h);
+
+mf_trapmf_coeff("SL Low", sl_l);
+mf_trapmf_coeff("SL Medium", sl_m);
+mf_trapmf_coeff("SL High", sl_h);
 
 % Bandwith:
 bw_mf = [ mf_trapmf(bandwith, bw_l) mf_trapmf(bandwith, bw_m) mf_trapmf(bandwith, bw_h) ];
@@ -164,6 +176,25 @@ function mf = mf_trapmf(q, trapmf)
     end
 end
 
+% Show coefficients for reapezoidal function
+function mf_trapmf_coeff(term_name, trapmf)
+    q_l_0 = trapmf(1);
+    q_l_1 = trapmf(2);
+    q_h_1 = trapmf(3);
+    q_h_0 = trapmf(4);
+
+    fprintf("%s:\n", term_name);
+
+    fprintf("\t%.2f * x + %.2f\t\t", (-1 / (q_l_1 - q_l_0)), (q_l_0 / (q_l_1 - q_l_0)));
+    fprintf("%.2f <= x <= %.2f\n", q_l_0, q_l_1);
+
+    fprintf("\t1;\t\t%.2f <= x <= %.2f\n", q_l_1, q_h_1);
+
+    fprintf("\t%.2f * x + %.2f\t\t", (-1 / (q_h_0 - q_h_1)), (q_h_0 / (q_h_0 - q_h_1)));
+    fprintf("%.2f <= x <= %.2f\n", q_h_1, q_h_0);
+end
+
+% Calculate coefficients for a system of linear equations
 function q = value_trapmf(mf, trapmf)
     q_l_0 = trapmf(1);
     q_l_1 = trapmf(2);

@@ -32,7 +32,7 @@ fis = addMF(fis, "load", "trapmf", [70  90 100 100], 'Name', "high");
 
 % Service quality
 fis = addMF(fis, "quality", "trapmf", [ 0   0  20  40],  'Name', "low");
-fis = addMF(fis, "quality", "trapmf", [30  50  60  75],  'Name', "medium");
+fis = addMF(fis, "quality", "trapmf", [30  50  60  80],  'Name', "medium");
 fis = addMF(fis, "quality", "trapmf", [70  90 100 100],  'Name', "high");
 
 % Add rules
@@ -75,14 +75,14 @@ end % bandwith
 end
 
 % Test fuzzy system for predefined values
-bandwith = 1;
-loss = 50;
-load = 60;
+bandwith = 20;
+loss = 5;
+load = 40;
 
 quality = evalfis(fis, [bandwith loss load]);
 fprintf("Bandwith: %.2f Packet loss: %.2f Load: %.2f Service quality: %.2f\n", bandwith, loss, load, quality);
 
-%waitforbuttonpress;
+waitforbuttonpress;
 
 % Plot membership functions
 fig_mf = figure('name', "Membership Functions");
